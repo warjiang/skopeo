@@ -6,6 +6,17 @@
 
 set -e
 
+_EOL=20270501
+if [[ $(date +%Y%m%d) -ge $_EOL ]]; then
+    die "As of $_EOL this branch is probably
+no longer supported in RHEL 9.2/8.8, please
+confirm this with RHEL Program Management.  If so:
+It should be removed from Cirrus-Cron,
+the .cirrus.yml file removed, and
+the VM images (manually) unmarked
+'permanent=true'"
+fi
+
 # BEGIN Global export of all variables
 set -a
 
