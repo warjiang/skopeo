@@ -31,7 +31,8 @@ const (
 	v2DockerRegistryURL   = "localhost:5555" // Update also policy.json
 	v2s1DockerRegistryURL = "localhost:5556"
 	knownWindowsOnlyImage = "docker://mcr.microsoft.com/windows/nanoserver:1909"
-	knownListImage        = "docker://registry.fedoraproject.org/fedora-minimal" // could have either ":latest" or "@sha256:..." appended
+	knownListImageRepo    = "docker://registry.fedoraproject.org/fedora-minimal"
+	knownListImage        = knownListImageRepo + ":38"
 )
 
 type CopySuite struct {
@@ -253,8 +254,8 @@ func (s *CopySuite) TestCopyWithManifestListDigest(c *check.C) {
 	manifestDigest, err := manifest.Digest([]byte(m))
 	c.Assert(err, check.IsNil)
 	digest := manifestDigest.String()
-	assertSkopeoSucceeds(c, "", "copy", knownListImage+"@"+digest, "dir:"+dir1)
-	assertSkopeoSucceeds(c, "", "copy", "--multi-arch=all", knownListImage+"@"+digest, "dir:"+dir2)
+	assertSkopeoSucceeds(c, "", "copy", knownListImageRepo+"@"+digest, "dir:"+dir1)
+	assertSkopeoSucceeds(c, "", "copy", "--multi-arch=all", knownListImageRepo+"@"+digest, "dir:"+dir2)
 	assertSkopeoSucceeds(c, "", "copy", "dir:"+dir1, "oci:"+oci1)
 	assertSkopeoSucceeds(c, "", "copy", "dir:"+dir2, "oci:"+oci2)
 	out := combinedOutputOfCommand(c, "diff", "-urN", oci1, oci2)
@@ -291,9 +292,9 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigest(c *check.C) {
 	manifestDigest, err := manifest.Digest([]byte(m))
 	c.Assert(err, check.IsNil)
 	digest := manifestDigest.String()
-	assertSkopeoSucceeds(c, "", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
 	assertSkopeoSucceeds(c, "", "copy", "containers-storage:"+storage+"test@"+digest, "dir:"+dir1)
-	assertSkopeoSucceeds(c, "", "copy", knownListImage+"@"+digest, "dir:"+dir2)
+	assertSkopeoSucceeds(c, "", "copy", knownListImageRepo+"@"+digest, "dir:"+dir2)
 	runDecompressDirs(c, "", dir1, dir2)
 	assertDirImagesAreEqual(c, dir1, dir2)
 }
@@ -313,9 +314,9 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigestMultipleArches(c *check
 	manifestDigest, err := manifest.Digest([]byte(m))
 	c.Assert(err, check.IsNil)
 	digest := manifestDigest.String()
-	assertSkopeoSucceeds(c, "", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
 	assertSkopeoSucceeds(c, "", "copy", "containers-storage:"+storage+"test@"+digest, "dir:"+dir1)
-	assertSkopeoSucceeds(c, "", "copy", knownListImage+"@"+digest, "dir:"+dir2)
+	assertSkopeoSucceeds(c, "", "copy", knownListImageRepo+"@"+digest, "dir:"+dir2)
 	runDecompressDirs(c, "", dir1, dir2)
 	assertDirImagesAreEqual(c, dir1, dir2)
 }
@@ -331,8 +332,8 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigestMultipleArchesBothUseLi
 	digest := manifestDigest.String()
 	_, err = manifest.ListFromBlob([]byte(m), manifest.GuessMIMEType([]byte(m)))
 	c.Assert(err, check.IsNil)
-	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
-	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
 	assertSkopeoFails(c, `.*reading manifest for image instance.*does not exist.*`, "--override-arch=amd64", "inspect", "containers-storage:"+storage+"test@"+digest)
 	assertSkopeoFails(c, `.*reading manifest for image instance.*does not exist.*`, "--override-arch=amd64", "inspect", "--config", "containers-storage:"+storage+"test@"+digest)
 	i2 := combinedOutputOfCommand(c, skopeoBinary, "--override-arch=arm64", "inspect", "--config", "containers-storage:"+storage+"test@"+digest)
@@ -357,8 +358,8 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigestMultipleArchesFirstUses
 	c.Assert(err, check.IsNil)
 	arm64Instance, err := list.ChooseInstance(&types.SystemContext{ArchitectureChoice: "arm64"})
 	c.Assert(err, check.IsNil)
-	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
-	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImage+"@"+arm64Instance.String(), "containers-storage:"+storage+"test@"+arm64Instance.String())
+	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImageRepo+"@"+arm64Instance.String(), "containers-storage:"+storage+"test@"+arm64Instance.String())
 	i1 := combinedOutputOfCommand(c, skopeoBinary, "--override-arch=amd64", "inspect", "--config", "containers-storage:"+storage+"test@"+digest)
 	var image1 imgspecv1.Image
 	err = json.Unmarshal([]byte(i1), &image1)
@@ -393,8 +394,8 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigestMultipleArchesSecondUse
 	c.Assert(err, check.IsNil)
 	arm64Instance, err := list.ChooseInstance(&types.SystemContext{ArchitectureChoice: "arm64"})
 	c.Assert(err, check.IsNil)
-	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImage+"@"+amd64Instance.String(), "containers-storage:"+storage+"test@"+amd64Instance.String())
-	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImageRepo+"@"+amd64Instance.String(), "containers-storage:"+storage+"test@"+amd64Instance.String())
+	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
 	i1 := combinedOutputOfCommand(c, skopeoBinary, "--override-arch=amd64", "inspect", "--config", "containers-storage:"+storage+"test@"+amd64Instance.String())
 	var image1 imgspecv1.Image
 	err = json.Unmarshal([]byte(i1), &image1)
@@ -429,9 +430,9 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigestMultipleArchesThirdUses
 	c.Assert(err, check.IsNil)
 	arm64Instance, err := list.ChooseInstance(&types.SystemContext{ArchitectureChoice: "arm64"})
 	c.Assert(err, check.IsNil)
-	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImage+"@"+amd64Instance.String(), "containers-storage:"+storage+"test@"+amd64Instance.String())
-	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
-	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImageRepo+"@"+amd64Instance.String(), "containers-storage:"+storage+"test@"+amd64Instance.String())
+	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
 	assertSkopeoFails(c, `.*reading manifest for image instance.*does not exist.*`, "--override-arch=amd64", "inspect", "--config", "containers-storage:"+storage+"test@"+digest)
 	i1 := combinedOutputOfCommand(c, skopeoBinary, "--override-arch=amd64", "inspect", "--config", "containers-storage:"+storage+"test@"+amd64Instance.String())
 	var image1 imgspecv1.Image
@@ -466,7 +467,7 @@ func (s *CopySuite) TestCopyWithManifestListStorageDigestMultipleArchesTagAndDig
 	arm64Instance, err := list.ChooseInstance(&types.SystemContext{ArchitectureChoice: "arm64"})
 	c.Assert(err, check.IsNil)
 	assertSkopeoSucceeds(c, "", "--override-arch=amd64", "copy", knownListImage, "containers-storage:"+storage+"test:latest")
-	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImage+"@"+digest, "containers-storage:"+storage+"test@"+digest)
+	assertSkopeoSucceeds(c, "", "--override-arch=arm64", "copy", knownListImageRepo+"@"+digest, "containers-storage:"+storage+"test@"+digest)
 	assertSkopeoFails(c, `.*reading manifest for image instance.*does not exist.*`, "--override-arch=amd64", "inspect", "--config", "containers-storage:"+storage+"test@"+digest)
 	i1 := combinedOutputOfCommand(c, skopeoBinary, "--override-arch=arm64", "inspect", "--config", "containers-storage:"+storage+"test:latest")
 	var image1 imgspecv1.Image
