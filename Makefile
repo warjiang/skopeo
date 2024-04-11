@@ -248,7 +248,7 @@ test-unit-local: bin/skopeo
 	$(GO) test $(MOD_VENDOR) -tags "$(BUILDTAGS)" $$($(GO) list $(MOD_VENDOR) -tags "$(BUILDTAGS)" -e ./... | grep -v '^github\.com/containers/skopeo/\(integration\|vendor/.*\)$$')
 
 vendor:
-	$(GO) mod tidy
+	$(GO) mod tidy -compat=1.17
 	$(GO) mod vendor
 	$(GO) mod verify
 
