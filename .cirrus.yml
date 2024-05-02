@@ -74,33 +74,8 @@ doccheck_task:
       "${SKOPEO_PATH}/${SCRIPT_BASE}/runner.sh" build
       "${SKOPEO_PATH}/${SCRIPT_BASE}/runner.sh" doccheck
 
-osx_task:
-    # Run for regular PRs and those with [CI:BUILD] but not [CI:DOCS]
-    only_if: &not_docs_multiarch >-
-        $CIRRUS_CHANGE_TITLE !=~ '.*CI:DOCS.*' &&
-        $CIRRUS_CRON != 'multiarch'
-    depends_on:
-        - validate
-    macos_instance:
-        image: catalina-xcode
-    setup_script: |
-        # /usr/local/opt/go@1.18 will be populated by (brew install go@1.18) below
-        export PATH=$GOPATH/bin:/usr/local/opt/go@1.18/bin:$PATH
-        brew update
-        brew install gpgme go@1.18 go-md2man
-        go install golang.org/x/lint/golint@latest
-    test_script: |
-        export PATH=$GOPATH/bin:/usr/local/opt/go@1.18/bin:$PATH
-        go version
-        go env
-        make validate-local test-unit-local bin/skopeo
-        sudo make install
-        /usr/local/bin/skopeo -v
-
-
 cross_task:
     alias: cross
-    only_if: *not_docs_multiarch
     depends_on:
         - validate
     gce_instance: &standardvm
@@ -241,7 +216,6 @@ success_task:
     depends_on:
         - validate
         - doccheck
-        - osx
         - cross
         - test_skopeo
         - image_build
