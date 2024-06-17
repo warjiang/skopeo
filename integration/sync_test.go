@@ -24,13 +24,13 @@ const (
 	// manifest lists, and with some tags that don't.
 	pullableRepo = "quay.io/libpod/testimage"
 	// A tagged image in the repository that we can inspect and copy.
-	pullableTaggedImage = "k8s.gcr.io/coredns/coredns:v1.6.6"
+	pullableTaggedImage = "registry.k8s.io/coredns/coredns:v1.6.6"
 	// A tagged manifest list in the repository that we can inspect and copy.
-	pullableTaggedManifestList = "k8s.gcr.io/coredns/coredns:v1.8.0"
+	pullableTaggedManifestList = "registry.k8s.io/coredns/coredns:v1.8.0"
 	// A repository containing multiple tags, some of which are for
 	// manifest lists, and which includes a "latest" tag.  We specify the
 	// name here without a tag.
-	pullableRepoWithLatestTag = "k8s.gcr.io/pause"
+	pullableRepoWithLatestTag = "registry.k8s.io/pause"
 )
 
 func init() {
@@ -309,7 +309,7 @@ func (s *SyncSuite) TestYamlRegex2Dir(c *check.C) {
 	dir1 := path.Join(tmpDir, "dir1")
 
 	yamlConfig := `
-k8s.gcr.io:
+registry.k8s.io:
   images-by-tag-regex:
     pause: ^[12]\.0$  # regex string test
 `
@@ -343,7 +343,7 @@ func (s *SyncSuite) TestYamlDigest2Dir(c *check.C) {
 	dir1 := path.Join(tmpDir, "dir1")
 
 	yamlConfig := `
-k8s.gcr.io:
+registry.k8s.io:
   images:
     pause:
     - sha256:59eec8837a4d942cc19a52b8c09ea75121acc38114a2c68b98983ce9356b8610
@@ -374,7 +374,7 @@ func (s *SyncSuite) TestYaml2Dir(c *check.C) {
 	dir1 := path.Join(tmpDir, "dir1")
 
 	yamlConfig := `
-k8s.gcr.io:
+registry.k8s.io:
   images:
     coredns/coredns:
       - v1.8.0
