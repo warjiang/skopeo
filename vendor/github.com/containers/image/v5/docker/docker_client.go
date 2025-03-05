@@ -900,13 +900,18 @@ func newBearerTokenFromHTTPResponseBody(res *http.Response) (*bearerToken, error
 // detectPropertiesHelper performs the work of detectProperties which executes
 // it at most once.
 func (c *dockerClient) detectPropertiesHelper(ctx context.Context) error {
-	// We overwrite the TLS clients `InsecureSkipVerify` only if explicitly
-	// specified by the system context
-	if c.sys != nil && c.sys.DockerInsecureSkipTLSVerify != types.OptionalBoolUndefined {
-		c.tlsClientConfig.InsecureSkipVerify = c.sys.DockerInsecureSkipTLSVerify == types.OptionalBoolTrue
+	var proxyURL *url.URL
+	if c.sys != nil {
+		proxyURL = c.sys.ProxyURL
+		// We overwrite the TLS clients `InsecureSkipVerify` only if explicitly
+		// specified by the system context
+		if c.sys.DockerInsecureSkipTLSVerify != types.OptionalBoolUndefined {
+			c.tlsClientConfig.InsecureSkipVerify = c.sys.DockerInsecureSkipTLSVerify == types.OptionalBoolTrue
+		}
 	}
 	tr := tlsclientconfig.NewTransport()
 	tr.TLSClientConfig = c.tlsClientConfig
+	tr.Proxy = http.ProxyURL(proxyURL)
 	c.client = &http.Client{Transport: tr}
 
 	ping := func(scheme string) error {
