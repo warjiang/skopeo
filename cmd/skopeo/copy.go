@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 
@@ -26,7 +27,9 @@ type copyOptions struct {
 	global                   *globalOptions
 	deprecatedTLSVerify      *deprecatedTLSVerifyOption
 	srcImage                 *imageOptions
+	srcProxy                 string
 	destImage                *imageDestOptions
+	destProxy                string
 	retryOpts                *retry.Options
 	additionalTags           []string                  // For docker-archive: destinations, in addition to the name:tag specified as destination, also add these
 	removeSignatures         bool                      // Do not copy signatures from the source image
@@ -97,6 +100,8 @@ See skopeo(1) section "IMAGE NAMES" for the expected format
 	flags.IntSliceVar(&opts.encryptLayer, "encrypt-layer", []int{}, "*Experimental* the 0-indexed layer indices, with support for negative indexing (e.g. 0 is the first layer, -1 is the last layer)")
 	flags.StringSliceVar(&opts.decryptionKeys, "decryption-key", []string{}, "*Experimental* key needed to decrypt the image")
 	flags.UintVar(&opts.imageParallelCopies, "image-parallel-copies", 0, "Maximum number of image layers to be copied (pulled/pushed) simultaneously. Not setting this field will fall back to containers/image defaults.")
+	flags.StringVar(&opts.srcProxy, "src-proxy", "", "URL of a proxy to use when fetch images")
+	flags.StringVar(&opts.destProxy, "dest-proxy", "", "URL of a proxy to use when put images")
 	return cmd
 }
 
@@ -155,9 +160,21 @@ func (opts *copyOptions) run(args []string, stdout io.Writer) (retErr error) {
 	if err != nil {
 		return err
 	}
+	// if srcProxy is not empty, set ProxyURL in sourceCtx
+	if opts.srcProxy != "" {
+		if srcProxyURL, err := url.Parse(opts.srcProxy); err == nil {
+			sourceCtx.ProxyURL = srcProxyURL
+		}
+	}
 	destinationCtx, err := opts.destImage.newSystemContext()
 	if err != nil {
 		return err
+	}
+	// if destProxy is not empty, set ProxyURL in destinationCtx
+	if opts.destProxy != "" {
+		if destProxyURL, err := url.Parse(opts.destProxy); err == nil {
+			destinationCtx.ProxyURL = destProxyURL
+		}
 	}
 
 	var manifestType string
