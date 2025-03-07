@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"io"
+	"net/url"
 	"time"
 
 	"github.com/containers/image/v5/docker/reference"
@@ -676,6 +677,8 @@ type SystemContext struct {
 	CompressionFormat *compression.Algorithm
 	// CompressionLevel specifies what compression level is used
 	CompressionLevel *int
+	// ProxyURL specifies proxy configuration schema (like socks5://username:password@ip:port)
+	ProxyURL *url.URL
 }
 
 // ProgressEvent is the type of events a progress reader can produce
