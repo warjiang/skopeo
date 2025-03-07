@@ -2,10 +2,10 @@ name: Mark stale issues and pull requests
 
 # Please refer to https://github.com/actions/stale/blob/master/action.yml
 # to see all config knobs of the stale action.
-
-on:
-  schedule:
-  - cron: "0 0 * * *"
+#
+#on:
+#  schedule:
+#  - cron: "0 0 * * *"
 
 permissions:
   contents: read
