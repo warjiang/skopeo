@@ -1,12 +1,6 @@
 name: Daily build
 
 on:
-  push:
-    branches:
-      - feat/opt-proxy-build
-  pull_request:
-    branches:
-      - feat/opt-proxy-build
   workflow_dispatch:
     inputs:
       version:
@@ -27,7 +21,7 @@ jobs:
           # golang:1.22-alpine
           build_image="golang:1.22-alpine"
           docker pull "${build_image}"
-          docker run --rm -it -v $PWD:/build -w /build  "${build_image}" sh build-binary.sh
+          docker run --rm -t -v $PWD:/build -w /build  "${build_image}" sh build-binary.sh
           ls -al bin/
           cd ../
           ls -al ./
