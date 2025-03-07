@@ -677,7 +677,7 @@ type SystemContext struct {
 	CompressionFormat *compression.Algorithm
 	// CompressionLevel specifies what compression level is used
 	CompressionLevel *int
-
+	// ProxyURL specifies proxy configuration schema (like socks5://username:password@ip:port)
 	ProxyURL *url.URL
 }
 
