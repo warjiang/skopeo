@@ -4,8 +4,8 @@
 # https://github.com/containers/podman/blob/main/.github/workflows/issue_pr_lock.yml
 
 on:
-  schedule:
-    - cron:  '0 0 * * *'
+#  schedule:
+#    - cron:  '0 0 * * *'
   # Debug: Allow triggering job manually in github-actions WebUI
   workflow_dispatch: {}
 
